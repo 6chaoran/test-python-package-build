@@ -5,14 +5,15 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: ["3.9"]
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}-${{ matrix.os }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
@@ -28,14 +29,12 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Build python package
+      - name: install python package
         run: |
-          python -m setup build sdist
-      - name: upload testpypi
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.TESTPYPI_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          python -m pip install -e .
+      - name: test python package
+        run: |
+          python -c "import summarytools as st; print(st.__version__);"
       # - name: Test with pytest
       #   run: |
       #     pytest
